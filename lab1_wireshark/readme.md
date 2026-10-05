@@ -1,8 +1,8 @@
 # Lab 1: HTTP/TCP and DNS/UDP in Wireshark
 
-[Repository overview](../README.md) · [Original comparison report (PDF)](report/comparing_TCP_UDP.pdf)
+[Repository overview](../README.md) · [Comparison report (PDF)](report/comparing_TCP_UDP.pdf)
 
-These notes describe the saved coursework captures. Open the linked files in Wireshark and enter each filter in the display-filter bar.
+Open the linked captures in Wireshark and type each filter into the display-filter bar.
 
 ## HTTP over TCP
 
@@ -14,7 +14,7 @@ Display filter:
 tcp.stream == 16
 ```
 
-The recorded three-way handshake uses Wireshark's relative sequence numbers:
+The three-way handshake, using Wireshark's relative sequence numbers:
 
 | Packet | Direction | Flags | Sequence | Acknowledgment | TCP payload length |
 | --- | --- | --- | --- | --- | --- |
@@ -22,16 +22,16 @@ The recorded three-way handshake uses Wireshark's relative sequence numbers:
 | 3015 | Server → client | SYN, ACK | 0 | 1 | 0 |
 | 3016 | Client → server | ACK | 1 | 1 | 0 |
 
-Packet 3017 requests `GET /online/`. Packet 3027 returns `200 OK` with HTML content; the original notes record a gzipped response. The capture also records a server `FIN, ACK` at packet 3087 and the client's acknowledgment at packet 3088. That pair describes the recorded server-side close exchange, not every step of a complete two-sided shutdown.
+Packet 3017 is the `GET /online/` request. The `200 OK` response (gzip-compressed HTML) arrives in two segments, packets 3026 and 3027; Wireshark shows the reassembled response on packet 3027. Later, the server sends `FIN, ACK` in packet 3087 and the client acknowledges it in packet 3088. That pair is the server's side of the close; the capture doesn't show every step of a full two-way shutdown.
 
-| Evidence | Screenshot |
+| What it shows | Screenshot |
 | --- | --- |
-| HTTP request and successful response | [HTTP 200 OK](screenshots/part1_HTTP_OK.png) |
+| HTTP request and `200 OK` response | [HTTP 200 OK](screenshots/part1_HTTP_OK.png) |
 | Client SYN | [Handshake step 1](screenshots/part2_handshake_1_syn.png) |
 | Server SYN, ACK | [Handshake step 2](screenshots/part2_handshake_2_syn.png) |
 | Client ACK | [Handshake step 3](screenshots/part2_handshake_3_syn.png) |
 
-The third screenshot retains its original filename ending in `_syn`; its role in the handshake is the final ACK.
+The third screenshot's filename ends in `_syn`, but it shows the final ACK.
 
 ## DNS over UDP
 
@@ -43,15 +43,13 @@ Display filter:
 dns.id == 0x2b02
 ```
 
-Packet 24 is an A-record query for `neverssl.com`, sent from client port `52938` to DNS port `53`. Packet 25 is the matching standard response, returning `34.223.124.45`. This is the address observed in the saved capture, not a claim about the domain's current address.
+Packet 24 is an A-record query for `neverssl.com`, sent from client port `52938` to DNS port `53`. Packet 25 is the matching response, which returned `34.223.124.45` at the time of the capture. The domain's address may have changed since.
 
 - [DNS query and UDP header](screenshots/part3_udp_query.png)
 - [DNS response and returned address](screenshots/part3_udp_response.png)
 
-## Reading the comparison report
+## The comparison report
 
-The [submitted PDF](report/comparing_TCP_UDP.pdf) compares connection establishment, reliability, ordering, use cases, and overhead. It remains unchanged as coursework evidence.
+The [report](report/comparing_TCP_UDP.pdf) compares TCP and UDP on connection setup, reliability, ordering, typical uses and overhead. It is the version I submitted.
 
-One clarification to its checksum statement: an all-zero UDP checksum indicates omission for IPv4; IPv6 normally requires a UDP checksum, with narrowly defined exceptions. UDP itself does not provide reliable or ordered delivery. The report's performance comparison is qualitative; this lab does not establish a latency or throughput benchmark. See [RFC 768](https://www.rfc-editor.org/rfc/rfc768.html) and [RFC 8200, section 8.1](https://www.rfc-editor.org/rfc/rfc8200.html#section-8.1).
-
-The captures contain surrounding traffic and network metadata. Documentation and file references were reviewed during cleanup; no new packets were captured and no lab application was rerun.
+One correction to its checksum statement: an all-zero UDP checksum means "no checksum" only over IPv4. Over IPv6 the UDP checksum is required, apart from a few narrow exceptions. Either way, UDP does not guarantee delivery or ordering. The report's performance comparison is qualitative; the lab did not measure latency or throughput. See [RFC 768](https://www.rfc-editor.org/rfc/rfc768.html) and [RFC 8200, section 8.1](https://www.rfc-editor.org/rfc/rfc8200.html#section-8.1).
